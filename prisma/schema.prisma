@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+model daily_notes {
+  message_id           String    @id
+  channel_id           String
+  clan_id              String
+  create_time          DateTime  @default(now())
+  update_time          DateTime? @updatedAt
+  block                String?
+  today                String?
+  yesterday            String?
+  date                 DateTime? @db.Date
+  project_name         String?
+  work_type            String?
+  working_time         Float?
+  is_daily_late        Boolean   @default(false)
+  sender_id            String
+  member               String?
+  @@index([date])
+  @@index([channel_id])
+  @@map("daily_notes")
+}
+model weekly_reports {
+  id                     Int       @id @default(autoincrement())
+  channel_id             String    @db.VarChar(255)
+  project_name           String    @db.VarChar(500)
+  member                 String    @db.VarChar(500)
+  progress               String    @db.Text
+  customer_communication String    @db.Text
+  human_resource         String    @db.Text
+  profession             String    @db.VarChar(255)
+  technical_solution     String    @db.Text
+  testing                String    @db.Text
+  milestone              String    @db.Text
+  week_goal              String    @db.Text
+  issue                  String    @db.Text
+  risks                  String    @db.Text
+  create_time            DateTime  @default(now())
+  end_of_week            DateTime  @db.Date
+  week                   Int     @db.Int
+  month                  Int     @db.Int
+  year                   Int     @db.Int
+  @@index([channel_id])
+  @@map("weekly_reports")
+}
