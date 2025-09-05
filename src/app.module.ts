@@ -7,11 +7,13 @@ import { ConfigModule } from '@nestjs/config';
 import { KomuListener } from './listener/komulistener';
 import { PrismaModule } from './prisma/prisma.module';
 import { KomuListenerService } from './listener/komulistener.service';
+import { ReportsModule } from './report/reports.module';
 
 @Module({
   imports: [
     BotModule,
     PrismaModule,
+    ReportsModule,
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
