@@ -5,16 +5,14 @@ import { ReportService } from './reports.service';
 import { BotService } from 'src/bot/bot.service';
 
 @Injectable()
-export class ReportServices {
+export class ReportsCommand {
   constructor(
     private readonly reportService: ReportService,
     private readonly botService: BotService,
   ) {}
 
   @OnEvent(Events.ChannelMessage)
-  async handleCommand(
-    message: ChannelMessage,
-  ): Promise<ChannelMessageContent | null> {
+  async handleCommand(message: ChannelMessage): Promise<ChannelMessageContent | null> {
     if (message.sender_id === this.botService.getBotId()) {
       return null;
     }
@@ -25,49 +23,39 @@ export class ReportServices {
     }
 
     let finalResult: ChannelMessageContent | null = null;
+    
 
-    const replyMessage = await this.botService.sendChannelMessage({
-      type: 'channel',
-      payload: {
-        channel_id: message.channel_id,
-        message: {
-          type: 'system',
-          content: 'Processing your weekly report request...',
-        },
-      },
-      reply_to_message_id: message.id,
-    });
     if(parsed.commandName.startsWith('*weeklyreport')) {
-      switch (parsed.commandName) {
-        case '*weeklyreport':
-        //   replyMessage;
-          finalResult = await this.reportService.handleWeeklyReport(parsed.time);
-          break;
-        default:
-          return null;
+      // send waiting message
+      const replyMessage = await this.reportService.sendReplyMessage(message);
+      
+      try {
+        switch (parsed.commandName) {
+          case '*weeklyreport':
+            const reportResult = await this.reportService.handleWeeklyReport(parsed.time, message.channel_id, true);
+            
+            // Gắn return value vào finalResult
+            finalResult = {
+              t: reportResult ? JSON.stringify(reportResult, null, 2) : 'No report data available'
+            };
+            break;
+          default:
+            finalResult = {
+              t: 'Unknown command'
+            };
+            break;
+        }
+      } catch (error) {
+        finalResult = {
+          t: `Error generating report: ${error instanceof Error ? error.message : 'Unknown error'}`
+        };
       }
-    }
-    else return null;
 
-    // if (finalResult) {
-    //   await this.botService.updateMessage({
-    //     channel_id: message.channel_id,
-    //     message_id: replyMessage.message_id,
-    //     content: {
-    //       type: 'system',
-    //       content: finalResult.t || 'Weekly report generated successfully!',
-    //     },
-    //   });
-    // } else {
-    //   await this.botService.updateMessage({
-    //     channel_id: message.channel_id,
-    //     message_id: replyMessage.message_id,
-    //     content: {
-    //       type: 'system',
-    //       content: 'Failed to generate the weekly report.',
-    //     },
-    //   });
-    // }
+      // Update message with result
+      await this.reportService.updateMessageWithResult(message, replyMessage, finalResult);
+    } else {
+      return null;
+    }
 
     return finalResult;
   }

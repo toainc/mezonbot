@@ -1,7 +1,18 @@
 import { Injectable } from '@nestjs/common';
+import { ChannelMessage, ChannelMessageContent } from 'mezon-sdk';
+import { BotService } from '../bot/bot.service';
+import { ReportsRepository } from './reports.repository';
+import { AiService } from 'src/ai/ai.service';
+import { weekly_reports } from '../../generated/prisma';
+import { DailyNote, WeeklyReportResponse } from './interface/reports';
 
 @Injectable()
 export class ReportService {
+  constructor(
+    private readonly botService: BotService,
+    private readonly reportsRepository: ReportsRepository,
+    private readonly aiService: AiService
+  ) {}
   calculateTimeRange(time: number): { startDate: Date } {
     const maxWeeks = 12;
     const validTime = Math.max(0, Math.min(time, maxWeeks));
@@ -37,12 +48,76 @@ export class ReportService {
     }
   }
 
-  async handleWeeklyReport(time: Date): Promise<any> {
-    // Implement your logic to handle the weekly report here
-    console.log('Handling weekly report for time:', time);
-    // inputData = PharseDatabase(time);
-    return null;
+  /**
+   * the logic get Daily data of members in week
+   * apply prompt and submit to AI for generation the correct report response
+   */
+  async handleWeeklyReport(day: Date, channelId: string, option: boolean): Promise<WeeklyReportResponse | null> {
+    console.log('Handling weekly report for time:', day);
+    const endDate = new Date(day);
+    endDate.setDate(day.getDate() + 6);
+
+    //check if the report already exists
+    if (option) {
+      const existingReport = await this.reportsRepository.findExistedReport(channelId, day);
+      if (existingReport) {
+        console.log('Report already exists for this week');
+        return existingReport;
+      }
+    }
+
+    const inputData = await this.reportsRepository.findAllNodesInWeek(channelId, day, endDate);
+    
+    try {
+      const aiReport = await this.aiService.GenerateReport(inputData);
+      console.log('Generating new weekly report with data:', inputData);
+      return aiReport;
+    } catch (error) {
+      console.error('Error generating AI report:', error);
+      return null;
+    }
   }
 
-  
+  /**
+   *the logic to handle waiting reply message and update message with result
+   */
+  async sendReplyMessage(message: ChannelMessage) {
+    return await this.botService.sendChannelMessage({
+      type: 'channel',
+      payload: {
+        channel_id: message.channel_id,
+        message: {
+          type: 'system',
+          content: 'Generating weekly report, please wait...',
+        },
+      },
+      reply_to_message_id: message.id,
+    });
+  }
+
+  async updateMessageWithResult(
+    originalMessage: ChannelMessage,
+    replyMessage: any,
+    finalResult: ChannelMessageContent | null,
+  ) {
+    if (finalResult) {
+      await this.botService.updateMessage({
+        channel_id: originalMessage.channel_id,
+        message_id: replyMessage.message_id,
+        content: {
+          type: 'system',
+          content: finalResult.t || 'Weekly report generated successfully!',
+        },
+      });
+    } else {
+      await this.botService.updateMessage({
+        channel_id: originalMessage.channel_id,
+        message_id: replyMessage.message_id,
+        content: {
+          type: 'system',
+          content: 'Failed to generate the weekly report.',
+        },
+      });
+    }
+  }
 }

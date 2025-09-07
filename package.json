@@ -26,6 +26,7 @@
     "@nestjs/event-emitter": "^3.0.1",
     "@nestjs/platform-express": "^11.0.1",
     "@prisma/client": "^6.15.0",
+    "axios": "^1.11.0",
     "eventemitter2": "^6.4.9",
     "joi": "^18.0.1",
     "mezon-sdk": "^2.8.11",
