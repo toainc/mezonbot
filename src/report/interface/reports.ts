@@ -11,7 +11,7 @@ export interface DailyNote {
 
 export interface WeeklyReportResponse {
   project_name: string;
-  member: string;
+  member: number;
   progress: string;
   customer_communication: string;
   human_resource: string;

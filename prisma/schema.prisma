@@ -30,7 +30,7 @@ model weekly_reports {
   id                     Int       @id @default(autoincrement())
   channel_id             String    @db.VarChar(255)
   project_name           String    @db.VarChar(500)
-  member                 String    @db.VarChar(500)
+  member                 Int       @db.Int
   progress               String    @db.Text
   customer_communication String    @db.Text
   human_resource         String    @db.Text
@@ -43,9 +43,7 @@ model weekly_reports {
   risks                  String    @db.Text
   create_time            DateTime  @default(now())
   end_of_week            DateTime  @db.Date
-  week                   Int     @db.Int
-  month                  Int     @db.Int
-  year                   Int     @db.Int
+  date_log               DateTime  @db.Date
   @@index([channel_id])
   @@map("weekly_reports")
 }

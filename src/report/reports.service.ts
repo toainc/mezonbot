@@ -30,9 +30,10 @@ export class ReportService {
     return { startDate: targetWeekStart };
   }
 
-  parseCommand(command: string): { commandName: string; time: Date } {
+  parseCommand(command: string): { commandName: string; time: Date; option: boolean } {
     const commandName = command.split(' ')[0].toLowerCase();
     const timeParam = parseInt(command.split(' ')[1]) || 0;
+    const optionParam = command.split(' ')[2] === 'r' ? true : false;
 
     if (timeParam < 0 || timeParam > 12) {
       throw new Error('Time parameter must be between 0 and 12 weeks.');
@@ -42,6 +43,7 @@ export class ReportService {
       return {
         commandName,
         time: this.calculateTimeRange(timeParam).startDate,
+        option: optionParam,
       };
     } catch (error) {
       throw new Error('Error calculating time range: ' + error.message);
@@ -57,8 +59,8 @@ export class ReportService {
     const endDate = new Date(day);
     endDate.setDate(day.getDate() + 6);
 
-    //check if the report already exists
-    if (option) {
+    //check if the report already exists or not when option is false
+    if (!option) {
       const existingReport = await this.reportsRepository.findExistedReport(channelId, day);
       if (existingReport) {
         console.log('Report already exists for this week');
@@ -67,6 +69,7 @@ export class ReportService {
     }
 
     const inputData = await this.reportsRepository.findAllNodesInWeek(channelId, day, endDate);
+    console.log(`Found ${inputData.length} daily notes for the week starting ${day.toDateString()}`);
     
     try {
       const aiReport = await this.aiService.GenerateReport(inputData);

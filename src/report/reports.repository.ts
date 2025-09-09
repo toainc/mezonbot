@@ -43,15 +43,10 @@ export class ReportsRepository {
     channelId: string,
     date: Date,
   ): Promise<weekly_reports | null> {
-    const day = date.getDate();
-    const month = date.getMonth() + 1; // getMonth() is zero-based
-    const year = date.getFullYear();
     return this.prisma.weekly_reports.findFirst({
       where: {
         channel_id: channelId,
-        week: day,
-        month: month,
-        year: year,
+        date_log: date,
       },
     });
   }

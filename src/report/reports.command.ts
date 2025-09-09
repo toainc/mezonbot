@@ -3,6 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { ChannelMessage, ChannelMessageContent, Events } from 'mezon-sdk';
 import { ReportService } from './reports.service';
 import { BotService } from 'src/bot/bot.service';
+import { parse } from 'path';
 
 @Injectable()
 export class ReportsCommand {
@@ -32,7 +33,7 @@ export class ReportsCommand {
       try {
         switch (parsed.commandName) {
           case '*weeklyreport':
-            const reportResult = await this.reportService.handleWeeklyReport(parsed.time, message.channel_id, true);
+            const reportResult = await this.reportService.handleWeeklyReport(parsed.time, message.channel_id, parsed.option);
             
             // Gắn return value vào finalResult
             finalResult = {
@@ -64,6 +65,7 @@ export class ReportsCommand {
   private extractAndParseCommand(message: ChannelMessage): {
     commandName: string;
     time: Date;
+    option: boolean;
   } | null {
     const text = message?.content?.t;
     if (!text || typeof text !== 'string') {
