@@ -37,7 +37,7 @@ export class ReportsCommand {
             
             // Gắn return value vào finalResult
             finalResult = {
-              t: reportResult ? JSON.stringify(reportResult, null, 2) : 'No report data available'
+              t: reportResult ? this.formatReportMessage(reportResult) : 'No report data available'
             };
             break;
           default:
@@ -59,6 +59,41 @@ export class ReportsCommand {
     }
 
     return finalResult;
+  }
+
+  private formatReportMessage(reportData: any): string {
+    if (typeof reportData === 'string') {
+      try {
+        reportData = JSON.parse(reportData);
+      } catch {
+        return reportData;
+      }
+    }
+
+    let formattedMessage = '📊 **WEEKLY REPORT**\n\n';
+    
+    const fieldMap = {
+      'project_name': '🏢 **Project Name**',
+      'member': '👥 **Team Members**',
+      'progress': '📈 **Progress**',
+      'customer_communication': '💬 **Customer Communication**',
+      'human_resource': '🧑‍💼 **Human Resources**',
+      'profession': '🛠️ **Professional Skills**',
+      'technical_solution': '⚙️ **Technical Solutions**',
+      'testing': '🧪 **Testing & QA**',
+      'milestone': '🎯 **Next Milestone**',
+      'week_goal': '✅ **Week Goals**',
+      'issue': '⚠️ **Issues**',
+      'risks': '🚨 **Risks**'
+    };
+
+    for (const [key, label] of Object.entries(fieldMap)) {
+      if (reportData[key]) {
+        formattedMessage += `${label}\n${reportData[key]}\n\n`;
+      }
+    }
+
+    return formattedMessage;
   }
 
   //extract and valid command

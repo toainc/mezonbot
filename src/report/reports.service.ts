@@ -73,7 +73,7 @@ export class ReportService {
     
     try {
       const aiReport = await this.aiService.GenerateReport(inputData);
-      console.log('Generating new weekly report with data:', inputData);
+      // console.log('Generating new weekly report with data:', inputData);
       return aiReport;
     } catch (error) {
       console.error('Error generating AI report:', error);

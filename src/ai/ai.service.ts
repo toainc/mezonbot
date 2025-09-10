@@ -5,14 +5,9 @@ import { PROJECT_REPORT_SYSTEM_PROMPT } from './promt/ai.weeklyreport';
 import { DailyNote } from '../report/interface/reports';
 import { ReportsRepository } from '../report/reports.repository';
 import { WeeklyReportResponse } from '../report/interface/reports';
+import { encode } from 'gpt-tokenizer';
 
-interface InputData {
-  yesterday: string;
-  today: string;
-  block: string;
-  member: string;
-  date: Date;
-}
+export type InputData = string[];
 
 @Injectable()
 export class AiService {
@@ -30,9 +25,7 @@ export class AiService {
 
     this.client = axios.create({
       baseURL: this.BaseURL,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+
       timeout: this.timeout,
     });
     this.logger.log(
@@ -47,135 +40,89 @@ export class AiService {
     dailyNotes: DailyNote[],
   ): Promise<WeeklyReportResponse | null> {
     try {
-      let finalReport: WeeklyReportResponse | null = {
-        project_name: '',
-        member: 0,
-        progress: '',
-        customer_communication: '',
-        human_resource: '',
-        profession: '',
-        technical_solution: '',
-        testing: '',
-        milestone: '',
-        week_goal: '',
-        issue: '',
-        risks: '',
-      };
+      let finalReport: WeeklyReportResponse | null = null;
+      const input = this.clearInputData(dailyNotes, [
+        'projectName',
+        'memberName',
+        'today',
+        'date',
+        'block',
+      ]);
 
-      finalReport.project_name =
-        dailyNotes[0]?.projectName || 'Unknown Project';
-      finalReport.member = await this.countMemberWeeklyReport(dailyNotes);
-
-      let inputData: InputData[] = await this.ClearInputData(dailyNotes);
-
-      //update promt with input data
-      const promt = PROJECT_REPORT_SYSTEM_PROMPT(JSON.stringify(inputData[0]));
-      this.logger.log('Generated system prompt for AI');
-
-      const chunks = await this.ChunkInputData(inputData);
-
+      console.log(this.estimateInputTokens(input));
+      
+      // Tạo prompt và call AI
+      const prompt = `${PROJECT_REPORT_SYSTEM_PROMPT}\n\nDaily Notes Data:\n${input}\n\nGenerate weekly report based on the above data.`;
+      
       const response = await this.client.post('/v1/chat/completions', {
         model: this.model,
         messages: [
-          { role: 'system', content: promt },
           {
             role: 'user',
-            content: `Please generate a weekly report based on the provided data. Ensure the report is comprehensive and covers all required sections. Using chunk data as below: ${JSON.stringify(chunks)} to generate the report`,
-          },
+            content: prompt
+          }
         ],
-        max_tokens: 2000,
-        temperature: 0.5,
+        temperature: 0.7,
+        max_tokens: 2000
       });
 
-      if(!response.data || !response.data.choices || response.data.choices.length === 0) {
-        this.logger.error('Invalid response from AI service');
-        return null;
-      }
+      const aiResponse = response.data.choices[0].message.content;
+      console.log(this.estimateInputTokens(aiResponse));
+      // Loại bỏ các token không mong muốn
+      const cleanResponse = aiResponse
+        .replace(/<\|[^|]*\|>/g, '')  // Loại bỏ <|token|>
+        .replace(/^[^{]*/, '')        // Loại bỏ text trước dấu {
+        .replace(/[^}]*$/, '')        // Loại bỏ text sau dấu }
+        .trim();
       
-      const aiContent = response.data.choices[0].message.content;
-      this.logger.log('Received response from AI service');
-
-      let aiReport: WeeklyReportResponse;
+      // Console log AI response dễ nhìn
+      // console.log('🤖 AI Generated Weekly Report:');
+      // console.log('='.repeat(60));
       try {
-        aiReport = JSON.parse(aiContent);
-      } catch (error) {
-        this.logger.error('Error parsing AI response as JSON', error);
-        return null;
+        // Thử parse JSON để format đẹp
+        const parsedResponse = JSON.parse(cleanResponse);
+        // console.log(JSON.stringify(parsedResponse, null, 2));
+        // console.log('='.repeat(60));
+        
+        // Trả về parsed JSON response
+        return parsedResponse as WeeklyReportResponse;
+      } catch {
+        // Nếu không phải JSON, in text thường
+        // console.log(cleanResponse);
+        // console.log('='.repeat(60));
+        
+        // Trả về raw response nếu không parse được
+        return { raw_response: cleanResponse } as any;
       }
-
-      return aiReport;
     } catch (error) {
-      this.logger.error('Error generating report', error);
+      this.logger.error('Error generating weekly report', error);
       return null;
     }
   }
 
-  /**
-   * Split input data into chunks to fit model input limits with 2000 tokens per chunk
-   */
-  private async ChunkInputData(inputData: InputData[]): Promise<InputData[][]> {
-    const chunks: InputData[][] = [];
-    const MAX_TOKENS = 2000;
-    let currentChunk: InputData[] = [];
-    let currentTokenCount = 0;
-
-    for (const note of inputData) {
-      // Estimate tokens for this note (rough approximation: 4 characters per token)
-      const noteJson = JSON.stringify(note);
-      const estimatedTokens = Math.ceil(noteJson.length / 4);
-
-      // If adding this note would exceed the token limit, start a new chunk
-      if (
-        currentTokenCount + estimatedTokens > MAX_TOKENS &&
-        currentChunk.length > 0
-      ) {
-        chunks.push([...currentChunk]);
-        currentChunk = [note];
-        currentTokenCount = estimatedTokens;
-      } else {
-        currentChunk.push(note);
-        currentTokenCount += estimatedTokens;
+  private clearInputData(dailyNotes: DailyNote[], pick?: InputData): string {
+    const extractedData = dailyNotes.map((note) => {
+      const selectedData: Record<string, any> = {};
+      if (pick) {
+        pick.forEach((key) => {
+          selectedData[key] = note[key];
+        });
       }
-    }
+      return selectedData;
+    });
 
-    // Add the last chunk if it has any notes
-    if (currentChunk.length > 0) {
-      chunks.push(currentChunk);
-    }
-
-    return chunks;
-  }
-
-  private async ClearInputData(dailyNote: DailyNote[]): Promise<InputData[]> {
-    return dailyNote.map((note) => ({
-      yesterday: note.yesterday,
-      today: note.today,
-      block: note.block,
-      member: note.memberName,
-      date: note.date,
-    }));
-  }
-
-  /**
-   * Combine text from two report sections, avoiding duplication
-   */
-  private combineText(text1: string, text2: string): string {
-    if (!text1 && !text2) return '';
-    if (!text1) return text2;
-    if (!text2) return text1;
-
-    // If texts are similar or one contains the other, use the longer one
-    if (text1.includes(text2) || text2.includes(text1)) {
-      return text1.length >= text2.length ? text1 : text2;
-    }
-
-    // Otherwise combine them with a separator
-    return `${text1}\n\n${text2}`;
+    return JSON.stringify(extractedData);
   }
 
   private async countMemberWeeklyReport(
     dailyNotes: DailyNote[],
   ): Promise<number> {
     return new Set(dailyNotes.map((n) => n.memberName)).size;
+  }
+
+  estimateInputTokens(input: string): number {
+    // Sử dụng hàm encode từ gpt-tokenizer để lấy mảng token
+    const tokens = encode(input);
+    return tokens.length;
   }
 }
