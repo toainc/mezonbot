@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Đường dẫn file nguồn và file đích
-const inputPath = path.join(__dirname, '1756886817832.txt');
+const inputPath = path.join(__dirname, '1757472191435.txt');
 const outputPath = path.join(__dirname, 'daily_notes_sample.csv');
 
 // Đọc file txt

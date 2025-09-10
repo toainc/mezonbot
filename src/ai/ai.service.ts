@@ -39,6 +39,7 @@ export class AiService {
   async GenerateReport(
     dailyNotes: DailyNote[],
   ): Promise<WeeklyReportResponse | null> {
+    console.log(`team member count: ${this.countMemberofTeam(dailyNotes)}`);
     try {
       let finalReport: WeeklyReportResponse | null = null;
       const input = this.clearInputData(dailyNotes, [
@@ -49,32 +50,53 @@ export class AiService {
         'block',
       ]);
 
-      console.log(this.estimateInputTokens(input));
-      
       // Tạo prompt và call AI
       const prompt = `${PROJECT_REPORT_SYSTEM_PROMPT}\n\nDaily Notes Data:\n${input}\n\nGenerate weekly report based on the above data.`;
-      
+      console.log(this.estimateInputTokens(prompt));
       const response = await this.client.post('/v1/chat/completions', {
         model: this.model,
         messages: [
           {
             role: 'user',
-            content: prompt
-          }
+            content: prompt,
+          },
         ],
         temperature: 0.7,
-        max_tokens: 2000
+        max_tokens: 2000,
       });
 
       const aiResponse = response.data.choices[0].message.content;
       console.log(this.estimateInputTokens(aiResponse));
-      // Loại bỏ các token không mong muốn
-      const cleanResponse = aiResponse
-        .replace(/<\|[^|]*\|>/g, '')  // Loại bỏ <|token|>
-        .replace(/^[^{]*/, '')        // Loại bỏ text trước dấu {
-        .replace(/[^}]*$/, '')        // Loại bỏ text sau dấu }
+      // Loại bỏ các token không mong muốn và fix JSON
+      let cleanResponse = aiResponse
+        .replace(/<\|[^|]*\|>/g, '') // Loại bỏ <|token|>
         .trim();
-      
+
+      // Tìm JSON object đầu tiên
+      const startIndex = cleanResponse.indexOf('{');
+      if (startIndex !== -1) {
+        cleanResponse = cleanResponse.substring(startIndex);
+        
+        // Đếm braces để tìm JSON object hoàn chỉnh
+        let braceCount = 0;
+        let endIndex = -1;
+        
+        for (let i = 0; i < cleanResponse.length; i++) {
+          if (cleanResponse[i] === '{') braceCount++;
+          if (cleanResponse[i] === '}') {
+            braceCount--;
+            if (braceCount === 0) {
+              endIndex = i + 1;
+              break;
+            }
+          }
+        }
+        
+        if (endIndex !== -1) {
+          cleanResponse = cleanResponse.substring(0, endIndex);
+        }
+      }
+
       // Console log AI response dễ nhìn
       // console.log('🤖 AI Generated Weekly Report:');
       // console.log('='.repeat(60));
@@ -83,14 +105,14 @@ export class AiService {
         const parsedResponse = JSON.parse(cleanResponse);
         // console.log(JSON.stringify(parsedResponse, null, 2));
         // console.log('='.repeat(60));
-        
+
         // Trả về parsed JSON response
         return parsedResponse as WeeklyReportResponse;
       } catch {
         // Nếu không phải JSON, in text thường
         // console.log(cleanResponse);
         // console.log('='.repeat(60));
-        
+
         // Trả về raw response nếu không parse được
         return { raw_response: cleanResponse } as any;
       }
@@ -124,5 +146,9 @@ export class AiService {
     // Sử dụng hàm encode từ gpt-tokenizer để lấy mảng token
     const tokens = encode(input);
     return tokens.length;
+  }
+
+  countMemberofTeam(dailyNotes: DailyNote[]): number {
+    return new Set(dailyNotes.map((n) => n.memberName)).size;
   }
 }
