@@ -78,21 +78,24 @@ export class ReportsCommand {
       'progress': '📈 **Progress**',
       'customer_communication': '💬 **Customer Communication**',
       'human_resource': '🧑‍💼 **Human Resources**',
-      'profession': '🛠️ **Professional Skills**',
+      // 'profession': '🛠️ **Professional Skills**',
       'technical_solution': '⚙️ **Technical Solutions**',
       'testing': '🧪 **Testing & QA**',
       'milestone': '🎯 **Next Milestone**',
       'week_goal': '✅ **Week Goals**',
       'issue': '⚠️ **Issues**',
-      'risks': '🚨 **Risks**'
     };
 
     for (const [key, label] of Object.entries(fieldMap)) {
       if (reportData[key]) {
+        if( key === 'member' && typeof reportData[key] === 'number') {
+          formattedMessage += `${label}\n${reportData[key]} members\n\n`;
+          continue;
+        } else{
         formattedMessage += `${label}\n${reportData[key]}\n\n`;
       }
     }
-
+  }
     return formattedMessage;
   }
 

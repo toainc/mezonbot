@@ -8,6 +8,10 @@ import { DailyNote } from './interface/reports';
 export class ReportsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  async Project(note: DailyNote): Promise<string> {
+    return note.projectName || 'Unknown Project';
+  }
+
   async findAllNodesInWeek(
     channelID: string,
     startDate: Date,

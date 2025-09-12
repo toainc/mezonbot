@@ -11,7 +11,7 @@ export class ReportService {
   constructor(
     private readonly botService: BotService,
     private readonly reportsRepository: ReportsRepository,
-    private readonly aiService: AiService
+    private readonly aiService: AiService,
   ) {}
   calculateTimeRange(time: number): { startDate: Date } {
     const maxWeeks = 12;
@@ -30,7 +30,11 @@ export class ReportService {
     return { startDate: targetWeekStart };
   }
 
-  parseCommand(command: string): { commandName: string; time: Date; option: boolean } {
+  parseCommand(command: string): {
+    commandName: string;
+    time: Date;
+    option: boolean;
+  } {
     const commandName = command.split(' ')[0].toLowerCase();
     const timeParam = parseInt(command.split(' ')[1]) || 0;
     const optionParam = command.split(' ')[2] === 'r' ? true : false;
@@ -54,27 +58,39 @@ export class ReportService {
    * the logic get Daily data of members in week
    * apply prompt and submit to AI for generation the correct report response
    */
-  async handleWeeklyReport(day: Date, channelId: string, option: boolean): Promise<WeeklyReportResponse | null> {
+  async handleWeeklyReport(
+    day: Date,
+    channelId: string,
+    option: boolean,
+  ): Promise<WeeklyReportResponse | null> {
     console.log('Handling weekly report for time:', day);
     const endDate = new Date(day);
     endDate.setDate(day.getDate() + 6);
 
     //check if the report already exists or not when option is false
     if (!option) {
-      const existingReport = await this.reportsRepository.findExistedReport(channelId, day);
+      const existingReport = await this.reportsRepository.findExistedReport(
+        channelId,
+        day,
+      );
       if (existingReport) {
         console.log('Report already exists for this week');
         return existingReport;
       }
     }
 
-    const inputData = await this.reportsRepository.findAllNodesInWeek(channelId, day, endDate);
-    console.log(`Found ${inputData.length} daily notes for the week starting ${day.toDateString()}`);
-    
+    const inputData = await this.reportsRepository.findAllNodesInWeek(
+      channelId,
+      day,
+      endDate,
+    );
+    console.log(
+      `Found ${inputData.length} daily notes for the week starting ${day.toDateString()}`,
+    );
+
     try {
-      const aiReport = await this.aiService.GenerateReport(inputData);
+      return await this.aiService.GenerateReport(inputData);
       // console.log('Generating new weekly report with data:', inputData);
-      return aiReport;
     } catch (error) {
       console.error('Error generating AI report:', error);
       return null;

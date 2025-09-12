@@ -39,9 +39,7 @@ export class AiService {
   async GenerateReport(
     dailyNotes: DailyNote[],
   ): Promise<WeeklyReportResponse | null> {
-    console.log(`team member count: ${this.countMemberofTeam(dailyNotes)}`);
     try {
-      let finalReport: WeeklyReportResponse | null = null;
       const input = this.clearInputData(dailyNotes, [
         'projectName',
         'memberName',
@@ -56,6 +54,11 @@ export class AiService {
       const response = await this.client.post('/v1/chat/completions', {
         model: this.model,
         messages: [
+          {
+            role: 'system',
+            content:
+              'You are an AI assistant that helps people find information.',
+          },
           {
             role: 'user',
             content: prompt,
@@ -76,11 +79,11 @@ export class AiService {
       const startIndex = cleanResponse.indexOf('{');
       if (startIndex !== -1) {
         cleanResponse = cleanResponse.substring(startIndex);
-        
+
         // Đếm braces để tìm JSON object hoàn chỉnh
         let braceCount = 0;
         let endIndex = -1;
-        
+
         for (let i = 0; i < cleanResponse.length; i++) {
           if (cleanResponse[i] === '{') braceCount++;
           if (cleanResponse[i] === '}') {
@@ -91,7 +94,7 @@ export class AiService {
             }
           }
         }
-        
+
         if (endIndex !== -1) {
           cleanResponse = cleanResponse.substring(0, endIndex);
         }
@@ -102,12 +105,24 @@ export class AiService {
       // console.log('='.repeat(60));
       try {
         // Thử parse JSON để format đẹp
-        const parsedResponse = JSON.parse(cleanResponse);
-        // console.log(JSON.stringify(parsedResponse, null, 2));
-        // console.log('='.repeat(60));
+        cleanResponse = JSON.parse(cleanResponse);
+        
+        const response : WeeklyReportResponse= {
+          project_name: dailyNotes[0]?.projectName || 'Unknown Project',
+          member: new Set(dailyNotes.map(n => n.memberName)).size,
+          progress: cleanResponse.progress || '',
+          customer_communication: cleanResponse.customer_communication || '',
+          human_resource: cleanResponse.human_resource || '',
+          profession: cleanResponse.profession || '',
+          technical_solution: cleanResponse.technical_solution || '',
+          testing: cleanResponse.testing || '',
+          milestone: cleanResponse.milestone || '',
+          week_goal: cleanResponse.week_goal || '',
+          issue: cleanResponse.issue || '',
+          risks: cleanResponse.risks || '',
+        }
 
-        // Trả về parsed JSON response
-        return parsedResponse as WeeklyReportResponse;
+        return response;
       } catch {
         // Nếu không phải JSON, in text thường
         // console.log(cleanResponse);
@@ -134,12 +149,6 @@ export class AiService {
     });
 
     return JSON.stringify(extractedData);
-  }
-
-  private async countMemberWeeklyReport(
-    dailyNotes: DailyNote[],
-  ): Promise<number> {
-    return new Set(dailyNotes.map((n) => n.memberName)).size;
   }
 
   estimateInputTokens(input: string): number {
