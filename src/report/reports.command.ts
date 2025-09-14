@@ -89,7 +89,23 @@ export class ReportsCommand {
 
     for (const [key, label] of Object.entries(fieldMap)) {
       if (reportData[key]) {
-        formattedMessage += `${label}\n${reportData[key]}\n\n`;
+        // Handle different data types properly to avoid [object Object] display
+        let formattedValue: string;
+        
+        if (typeof reportData[key] === 'string') {
+          formattedValue = reportData[key];
+        } else if (Array.isArray(reportData[key])) {
+          // Handle arrays by joining with line breaks
+          formattedValue = reportData[key].join('\n');
+        } else if (typeof reportData[key] === 'object') {
+          // Handle objects by converting to readable format
+          formattedValue = JSON.stringify(reportData[key], null, 2);
+        } else {
+          // Handle other types (numbers, booleans, etc.)
+          formattedValue = String(reportData[key]);
+        }
+        
+        formattedMessage += `${label}\n${formattedValue}\n\n`;
       }
     }
 
