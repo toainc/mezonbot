@@ -13,13 +13,11 @@ export interface WeeklyReportResponse {
   project_name: string;
   member: number;
   progress: string;
-  customer_communication: string;
+  customer_communication: string | null;
   human_resource: string;
-  profession: string;
-  technical_solution: string;
-  testing: string;
-  milestone: string;
+  technical_solution: string | null;
+  testing: string | null;
+  milestone: string | null;
   week_goal: string;
   issue: string;
-  risks: string;
 }

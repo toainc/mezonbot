@@ -5,6 +5,7 @@ import { ReportsRepository } from './reports.repository';
 import { AiService } from 'src/ai/ai.service';
 import { weekly_reports } from '../../generated/prisma';
 import { DailyNote, WeeklyReportResponse } from './interface/reports';
+import { response } from 'express';
 
 @Injectable()
 export class ReportService {
@@ -69,28 +70,23 @@ export class ReportService {
 
     //check if the report already exists or not when option is false
     if (!option) {
-      const existingReport = await this.reportsRepository.findExistedReport(
-        channelId,
-        day,
-      );
+      const existingReport = await this.reportsRepository.findExistedReport(channelId, day);
       if (existingReport) {
         console.log('Report already exists for this week');
         return existingReport;
       }
     }
 
-    const inputData = await this.reportsRepository.findAllNodesInWeek(
-      channelId,
-      day,
-      endDate,
-    );
-    console.log(
-      `Found ${inputData.length} daily notes for the week starting ${day.toDateString()}`,
-    );
+    const inputData = await this.reportsRepository.findAllNodesInWeek(channelId, day, endDate);
+    console.log(`Found ${inputData.length} daily notes for the week starting ${day.toDateString()}`);
 
     try {
-      return await this.aiService.GenerateReport(inputData);
-      // console.log('Generating new weekly report with data:', inputData);
+      const memberOfTeam = new Set(inputData.map(note => note.memberName)).size;
+      const responseAI = await this.aiService.GenerateReport(inputData);
+      if (responseAI) {
+        await this.reportsRepository.saveWeeklyReport(channelId, day, responseAI, memberOfTeam);
+      }
+      return responseAI;
     } catch (error) {
       console.error('Error generating AI report:', error);
       return null;

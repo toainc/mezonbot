@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { weekly_reports } from '../../generated/prisma';
-import { DailyNote } from './interface/reports';
+import { DailyNote, WeeklyReportResponse } from './interface/reports';
 
 @Injectable()
 export class ReportsRepository {
@@ -51,6 +51,30 @@ export class ReportsRepository {
       where: {
         channel_id: channelId,
         date_log: date,
+      },
+    });
+  }
+
+  async saveWeeklyReport(
+    channelId: string,
+    dateLog: Date,
+    reportData: WeeklyReportResponse,
+    member: number
+  ): Promise<void> {
+    this.prisma.weekly_reports.create({
+      data: {
+        channel_id: channelId,
+        date_log: dateLog,
+        project_name: reportData.project_name || '',
+        member: member,
+        progress: reportData.progress || '',
+        customer_communication: reportData.customer_communication || '',
+        human_resource: reportData.human_resource || '',
+        technical_solution: reportData.technical_solution,
+        testing: reportData.testing,
+        milestone: reportData.milestone,
+        week_goal: reportData.week_goal,
+        issue: reportData.issue || '',
       },
     });
   }

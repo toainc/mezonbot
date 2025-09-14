@@ -113,13 +113,11 @@ export class AiService {
           progress: cleanResponse.progress || '',
           customer_communication: cleanResponse.customer_communication || '',
           human_resource: cleanResponse.human_resource || '',
-          profession: cleanResponse.profession || '',
           technical_solution: cleanResponse.technical_solution || '',
           testing: cleanResponse.testing || '',
           milestone: cleanResponse.milestone || '',
           week_goal: cleanResponse.week_goal || '',
           issue: cleanResponse.issue || '',
-          risks: cleanResponse.risks || '',
         }
 
         return response;
