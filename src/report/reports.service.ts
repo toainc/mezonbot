@@ -87,7 +87,18 @@ export class ReportService {
         aiResponse.project_name = inputData[0]?.projectName || 'Unknown Project';
         aiResponse.member = new Set(inputData.map(n => n.memberName)).size;
         const dailyCheck = await this.DailyLess(inputData);
-        return { ...aiResponse, dailyLess: dailyCheck };
+        const finalReport = { ...aiResponse, dailyLess: dailyCheck };
+        
+        // Save the weekly report to database
+        try {
+          await this.reportsRepository.saveWeeklyReport(channelId, finalReport, day);
+          console.log(`Weekly report saved to database for channel ${channelId} on ${day.toDateString()}`);
+        } catch (saveError) {
+          console.error('Error saving weekly report to database:', saveError);
+          // Continue execution even if save fails
+        }
+        
+        return finalReport;
       }
       return null;
     } catch (error) {
