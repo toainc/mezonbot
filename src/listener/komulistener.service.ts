@@ -39,7 +39,7 @@ export class KomuListenerService {
         sender_id, 
         member, 
         channel_id: message.channel_id, 
-        clan_id: message.clan_id || '' 
+        clan_id: message.clan_id || ''
     };
       return result;
     }

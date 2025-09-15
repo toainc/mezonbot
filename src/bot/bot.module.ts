@@ -3,11 +3,13 @@ import { ConfigService } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MezonClient } from 'mezon-sdk';
 import { BotGateway } from './bot.gateway';
+import { BotService } from './bot.service';
 
 @Module({
-  imports: [EventEmitterModule.forRoot()],  
+  imports: [EventEmitterModule.forRoot(), ],  
   providers: [
     Logger,
+    BotService,
     {
       provide: 'MEZON',
       useFactory: async (configService: ConfigService, logger: Logger) => {
@@ -30,6 +32,6 @@ import { BotGateway } from './bot.gateway';
       inject: [BotGateway],
     },
   ],
-  exports: ['MEZON', BotGateway],
+  exports: ['MEZON', BotGateway, BotService],
 })
 export class BotModule {}
