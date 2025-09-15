@@ -1,42 +1,42 @@
 # 🤖 MezonBot - AI-Powered Project Management Bot
 
-MezonBot là một hệ thống bot thông minh được tích hợp với AI để phân tích báo cáo hàng ngày và tạo ra các báo cáo tuần tự động cho các dự án IT. Bot sử dụng NestJS framework và tích hợp với Mezon platform để cung cấp các tính năng quản lý dự án thông minh.
+MezonBot is an intelligent bot system integrated with AI to analyze daily reports and automatically generate weekly reports for IT projects. The bot uses NestJS framework and integrates with the Mezon platform to provide smart project management features.
 
-## 🌟 Tính năng chính
+## 🌟 Key Features
 
-- **📊 Báo cáo tuần tự động**: Phân tích dữ liệu daily notes và tạo báo cáo tuần chi tiết
-- **🤖 AI Integration**: Sử dụng LM Studio để xử lý ngôn ngữ tự nhiên
-- **💬 Mezon Bot Integration**: Tích hợp seamless với Mezon platform
-- **📈 Theo dõi tiến độ**: Phân tích và theo dõi tiến độ dự án realtime
-- **👥 Quản lý nhân sự**: Theo dõi hoạt động và đóng góp của từng thành viên
-- **🔍 Phân tích kỹ thuật**: Đánh giá giải pháp kỹ thuật và testing
+- **📊 Automated Weekly Reports**: Analyzes daily notes data and generates detailed weekly reports
+- **🤖 AI Integration**: Uses LM Studio and DeepSeek for natural language processing with fallback mechanism
+- **💬 Mezon Bot Integration**: Seamless integration with Mezon platform
+- **📈 Progress Tracking**: Real-time project progress analysis and monitoring
+- **👥 Team Management**: Tracks activities and contributions of each team member
+- **🔍 Technical Analysis**: Evaluates technical solutions and testing processes
 
-## 🛠️ Công nghệ sử dụng
+## 🛠️ Technology Stack
 
 - **Backend**: NestJS (Node.js framework)
-- **Database**: MySQL với Prisma ORM
-- **AI**: LM Studio (Local AI server)
+- **Database**: MySQL with Prisma ORM
+- **AI**: LM Studio (Local AI server) with DeepSeek fallback
 - **Platform**: Mezon SDK
 - **Language**: TypeScript
 - **Testing**: Jest
 
-## 📋 Yêu cầu hệ thống
+## 📋 System Requirements
 
-### Phần mềm cần cài đặt:
+### Required Software:
 
 - **Node.js**: >= 18.0.0
-- **npm** hoặc **yarn**: Latest version
+- **npm** or **yarn**: Latest version
 - **MySQL**: >= 8.0
-- **LM Studio**: Latest version (để chạy AI local)
+- **LM Studio**: Latest version (for local AI processing)
 
-### Phần cứng khuyến nghị:
+### Recommended Hardware:
 
-- **RAM**: >= 8GB (16GB khuyến nghị cho AI processing)
+- **RAM**: >= 8GB (16GB recommended for AI processing)
 - **Storage**: >= 10GB free space
-- **CPU**: Multi-core processor (Intel i5/AMD Ryzen 5 hoặc cao hơn)
-- **GPU**: Optional nhưng khuyến nghị cho AI processing
+- **CPU**: Multi-core processor (Intel i5/AMD Ryzen 5 or higher)
+- **GPU**: Optional but recommended for AI processing
 
-## 🚀 Hướng dẫn cài đặt
+## 🚀 Installation Guide
 
 ### 1. Clone Repository
 
@@ -45,25 +45,25 @@ git clone https://github.com/yourusername/mezonbot.git
 cd mezonbot
 ```
 
-### 2. Cài đặt Dependencies
+### 2. Install Dependencies
 
 ```bash
-# Sử dụng npm
+# Using npm
 npm install
 
-# Hoặc sử dụng yarn
+# Or using yarn
 yarn install
 ```
 
-### 3. Thiết lập Database
+### 3. Database Setup
 
-#### 3.1 Tạo MySQL Database
+#### 3.1 Create MySQL Database
 ```sql
 CREATE DATABASE teta;
 ```
 
-#### 3.2 Cấu hình Database Connection
-Tạo file `.env` trong thư mục root:
+#### 3.2 Configure Database Connection
+Create `.env` file in the root directory:
 
 ```env
 # Database Configuration
@@ -72,16 +72,20 @@ DATABASE_URL="mysql://username:password@localhost:3306/teta"
 # Mezon Configuration
 MEZON_TOKEN=your_mezon_bot_token_here
 
-# LM Studio Configuration
-LM_STUDIO_API_URL=http://127.0.0.1:1234
-LM_STUDIO_MODEL=your_model_name
-AI_TIMEOUT=1200000
+# AI Configuration - LM Studio (Primary)
+LM_STUDIO_API_URL=http://localhost:1234
+LM_STUDIO_MODEL=your_local_model_name
 
-# AI System Prompt
-AI_SYSTEM_PROMPT="You are a helpful project management assistant for analyzing daily reports and creating team summaries."
+# AI Configuration - DeepSeek (Fallback)
+DEEPSEEK_API_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-chat
+DEEPSEEK_API_KEY=your_deepseek_api_key_here
+
+# AI Service Configuration
+AI_TIMEOUT=120000
 ```
 
-#### 3.3 Chạy Database Migration
+#### 3.3 Run Database Migration
 ```bash
 # Generate Prisma client
 npx prisma generate
@@ -93,46 +97,46 @@ npx prisma migrate dev
 npx prisma db seed
 ```
 
-### 4. Thiết lập LM Studio
+### 4. LM Studio Setup
 
-#### 4.1 Tải và cài đặt LM Studio
-- Tải LM Studio từ [lmstudio.ai](https://lmstudio.ai/)
-- Cài đặt và khởi động ứng dụng
+#### 4.1 Download and Install LM Studio
+- Download LM Studio from [lmstudio.ai](https://lmstudio.ai/)
+- Install and launch the application
 
-#### 4.2 Tải Model AI
-- Mở LM Studio
-- Search và tải model phù hợp (khuyến nghị: models với 7B-20B parameters)
-- Load model vào server
+#### 4.2 Download AI Model
+- Open LM Studio
+- Search and download a suitable model (recommended: models with 7B-20B parameters)
+- Load the model into the server
 
-#### 4.3 Khởi động Local Server
-- Trong LM Studio, chuyển sang tab "Local Server"
-- Click "Start Server" 
-- Đảm bảo server chạy trên `http://127.0.0.1:1234`
+#### 4.3 Start Local Server
+- In LM Studio, switch to "Local Server" tab
+- Click "Start Server"
+- Ensure server is running on `http://localhost:1234`
 
-### 5. Cấu hình Mezon Bot
+### 5. Mezon Bot Configuration
 
-#### 5.1 Tạo Bot trên Mezon
-- Đăng nhập vào Mezon
-- Tạo bot mới và lấy bot token
-- Cấu hình permissions cho bot
+#### 5.1 Create Bot on Mezon
+- Log in to Mezon
+- Create a new bot and get the bot token
+- Configure permissions for the bot
 
-#### 5.2 Cập nhật Environment Variables
+#### 5.2 Update Environment Variables
 ```env
 MEZON_TOKEN=your_actual_bot_token
 ```
 
-## 🏃‍♂️ Khởi động hệ thống
+## 🏃‍♂️ Running the System
 
 ### Development Mode
 
 ```bash
-#khởi động
+# Start application
 yarn start
 
-# Khởi động với hot reload
+# Start with hot reload
 yarn start:dev
 
-# Hoặc với debugging
+# Or with debugging
 yarn start:debug
 ```
 
@@ -142,36 +146,42 @@ yarn start:debug
 # Build project
 npm run build
 
-# Khởi động production
+# Start production
 npm run start:prod
 ```
 
-### Development với Watch Mode
+### Development with Watch Mode
 
 ```bash
-# Theo dõi file changes và auto restart
+# Watch file changes and auto restart
 npm run start:dev
 ```
 
-## 📝 Sử dụng Bot
+## 📝 Bot Usage
 
-### Lệnh cơ bản:
+### Basic Commands:
 
 ```
-*weeklyreport                    # Tạo báo cáo tuần
-*weeklyreport --option          # Tạo báo cáo với tùy chọn đặc biệt
+*weeklyreport                    # Generate weekly report
+*weeklyreport 1                  # Generate report for 1 week ago
+*weeklyreport 2 r                # Regenerate report for 2 weeks ago
 ```
 
-### Ví dụ sử dụng:
+### Usage Examples:
 
-1. **Tạo báo cáo tuần cơ bản:**
+1. **Generate current week report:**
    ```
    *weeklyreport
    ```
 
-2. **Tạo báo cáo với options:**
+2. **Generate report for previous week:**
    ```
-   *weeklyreport --detailed
+   *weeklyreport 1
+   ```
+
+3. **Regenerate report with fresh data:**
+   ```
+   *weeklyreport 0 r
    ```
 
 ## 🧪 Testing
@@ -203,12 +213,12 @@ npm run lint
 npm run build
 ```
 
-## 📊 Cấu trúc dự án
+## 📊 Project Structure
 
 ```
 mezonbot/
 ├── src/
-│   ├── ai/                 # AI service và prompts
+│   ├── ai/                 # AI service and prompts
 │   ├── bot/                # Mezon bot logic
 │   ├── report/             # Report generation
 │   ├── listener/           # Event listeners
@@ -224,9 +234,35 @@ mezonbot/
 |----------|-------------|---------|----------|
 | `DATABASE_URL` | MySQL connection string | - | ✅ |
 | `MEZON_TOKEN` | Mezon bot token | - | ✅ |
-| `LM_STUDIO_API_URL` | LM Studio API endpoint | `http://127.0.0.1:1234` | ✅ |
-| `LM_STUDIO_MODEL` | AI model name | - | ✅ |
-| `AI_TIMEOUT` | AI request timeout (ms) | `1200000` | ❌ |
+| `LM_STUDIO_API_URL` | LM Studio API endpoint | `http://localhost:1234` | ❌ |
+| `LM_STUDIO_MODEL` | Local AI model name | - | ❌ |
+| `DEEPSEEK_API_URL` | DeepSeek API endpoint | `https://api.deepseek.com` | ❌ |
+| `DEEPSEEK_MODEL` | DeepSeek model name | `deepseek-chat` | ❌ |
+| `DEEPSEEK_API_KEY` | DeepSeek API key | - | ✅ |
+| `AI_TIMEOUT` | AI request timeout (ms) | `120000` | ❌ |
+
+## 🤖 AI Service Architecture
+
+The system uses a hybrid AI approach with intelligent fallback:
+
+### Primary Service - LM Studio:
+- **Local processing**: Fast and cost-effective
+- **Privacy**: Data stays on your machine
+- **Customizable**: Use any compatible model
+
+### Fallback Service - DeepSeek:
+- **Cloud-based**: High availability
+- **Reliable**: Professional API service
+- **Automatic**: Seamless failover when LM Studio is unavailable
+
+### Fallback Scenarios:
+| Situation | Action |
+|-----------|--------|
+| LM Studio offline | → Switch to DeepSeek |
+| LM Studio timeout | → Switch to DeepSeek |
+| LM Studio network error | → Switch to DeepSeek |
+| LM Studio not configured | → Use DeepSeek only |
+| Both services fail | → Return error |
 
 ## 🐛 Troubleshooting
 
@@ -234,7 +270,7 @@ mezonbot/
 
 #### 1. Database Connection Error
 ```bash
-# Kiểm tra MySQL service
+# Check MySQL service status
 sudo systemctl status mysql
 
 # Restart MySQL
@@ -242,30 +278,40 @@ sudo systemctl restart mysql
 ```
 
 #### 2. LM Studio Connection Error
-- Đảm bảo LM Studio server đang chạy
-- Kiểm tra URL và port trong `.env`
-- Verify model đã được load
+- Ensure LM Studio server is running
+- Check URL and port in `.env` file
+- Verify model is loaded properly
 
-#### 3. Mezon Bot Token Invalid
-- Kiểm tra token trong Mezon dashboard
-- Đảm bảo bot có đủ permissions
+#### 3. DeepSeek API Error
+- Check API key validity
+- Verify internet connection
+- Check API rate limits
 
-#### 4. AI Response Issues
-- Kiểm tra AI model compatibility
+#### 4. Mezon Bot Token Invalid
+- Verify token in Mezon dashboard
+- Ensure bot has sufficient permissions
+
+#### 5. AI Response Issues
+- Check AI model compatibility
 - Verify prompt configuration
-- Check token limits
+- Check token limits and timeouts
 
 ## 📈 Performance Tuning
 
 ### AI Optimization:
-- Sử dụng models phù hợp với hardware
-- Điều chỉnh `AI_TIMEOUT` based on response time
-- Optimize prompt length
+- Use models suitable for your hardware
+- Adjust `AI_TIMEOUT` based on response time
+- Optimize prompt length and complexity
 
 ### Database Optimization:
-- Thêm indexes cho frequently queried fields
+- Add indexes for frequently queried fields
 - Regular database maintenance
-- Connection pooling configuration
+- Configure connection pooling
+
+### Memory Management:
+- Monitor RAM usage during AI processing
+- Adjust chunk sizes for large datasets
+- Consider model quantization for better performance
 
 ## 🤝 Contributing
 
@@ -275,20 +321,31 @@ sudo systemctl restart mysql
 4. Push to branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
+### Development Guidelines:
+- Follow TypeScript best practices
+- Write comprehensive tests
+- Update documentation for new features
+- Use conventional commit messages
+
 ## 📄 License
 
 This project is licensed under the UNLICENSED License.
 
 ## 🆘 Support
 
-Nếu gặp vấn đề, vui lòng:
-1. Kiểm tra [Troubleshooting](#-troubleshooting) section
+If you encounter issues, please:
+1. Check the [Troubleshooting](#-troubleshooting) section
 2. Search existing [Issues](https://github.com/yourusername/mezonbot/issues)
-3. Create new issue nếu chưa có
+3. Create a new issue if none exists
+
+### Getting Help:
+- 📧 Email: support@yourcompany.com
+- 💬 Discord: [Your Discord Server]
+- 📚 Documentation: [Your Documentation Site]
 
 ## 🔄 Updates
 
-Để update hệ thống:
+To update the system:
 
 ```bash
 # Pull latest changes
@@ -303,4 +360,52 @@ npx prisma migrate dev
 # Restart application
 npm run start:dev
 ```
+
+## 🚀 Deployment
+
+### Production Deployment:
+
+1. **Environment Setup:**
+   ```bash
+   NODE_ENV=production
+   ```
+
+2. **Build and Start:**
+   ```bash
+   npm run build
+   npm run start:prod
+   ```
+
+3. **Process Management:**
+   ```bash
+   # Using PM2
+   pm2 start dist/main.js --name mezonbot
+   pm2 save
+   pm2 startup
+   ```
+
+### Docker Deployment:
+
+```dockerfile
+# Dockerfile example
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+RUN npm run build
+EXPOSE 3000
+CMD ["npm", "run", "start:prod"]
+```
+
+## 📊 Monitoring and Analytics
+
+- **Application Health**: Monitor AI service response times
+- **Database Performance**: Track query execution times
+- **Bot Activity**: Monitor command usage and success rates
+- **AI Usage**: Track token consumption and model performance
+
+---
+
+**Made with ❤️ by the MezonBot Team**
 

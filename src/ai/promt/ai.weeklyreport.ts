@@ -32,7 +32,7 @@ MANDATORY FIELDS (ALL must be included as strings):
 2. "member": Count unique team members and return as string number (e.g., "15")  
 3. "progress": Analyze task completion patterns, workflow efficiency, yesterday→today task connections, overall advancement
 4. "customer_communication": Assess client interactions, demos, stakeholder meetings, feedback sessions (use "No customer communication activities reported" if none)
-5. "human_resource": List team members with roles. Format: "Name1: task summary | Name2: task summary | Name3: task summary"
+5. "human_resource": List the highlighted team members with their roles who are either overloaded or underloaded due to their ticket workload, using the format: Name1: task summary | Name2: task summary | Name3: task summary"
 6. "profession": Summarize professional skills, expertise, and technical capabilities demonstrated by the team
 7. "technical_solution": Describe technical approaches, architectures, tools, frameworks, and implementation strategies used
 8. "testing": Evaluate QA activities, testing processes, bug identification, quality control measures, test coverage

@@ -10,23 +10,43 @@ import { encode } from 'gpt-tokenizer';
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
-  private readonly BaseURL: string | undefined;
-  private readonly model: string | undefined;
+  private readonly lmStudioURL: string | undefined;
+  private readonly lmStudioModel: string | undefined;
+  private readonly deepseekURL: string;
+  private readonly deepseekModel: string;
+  private readonly deepseekApiKey: string;
   private readonly timeout: number;
-  private readonly client: AxiosInstance;
+  private readonly lmStudioClient: AxiosInstance;
+  private readonly deepseekClient: AxiosInstance;
 
   constructor(private readonly configService: ConfigService) {
-    this.BaseURL = this.configService.get<string>('LM_STUDIO_API_URL');
-    this.model = this.configService.get<string>('LM_STUDIO_MODEL');
+    // LM Studio Configuration
+    this.lmStudioURL = this.configService.get<string>('LM_STUDIO_API_URL');
+    this.lmStudioModel = this.configService.get<string>('LM_STUDIO_MODEL');
+    
+    // DeepSeek Configuration
+    this.deepseekURL = this.configService.get<string>('DEEPSEEK_API_URL') || 'https://api.deepseek.com';
+    this.deepseekModel = this.configService.get<string>('DEEPSEEK_MODEL') || 'deepseek-chat';
+    this.deepseekApiKey = this.configService.get<string>('DEEPSEEK_API_KEY') || '';
+    
     this.timeout = this.configService.get<number>('AI_TIMEOUT') || 1200000;
 
-    // HTTP CLIENT SETUP: Configure axios instance for AI API calls
-    this.client = axios.create({
-      baseURL: this.BaseURL,
+    // HTTP CLIENT SETUP: Configure axios instances for both LM Studio and DeepSeek
+    this.lmStudioClient = axios.create({
+      baseURL: this.lmStudioURL,
       timeout: this.timeout,
     });
+
+    this.deepseekClient = axios.create({
+      baseURL: this.deepseekURL,
+      timeout: this.timeout,
+      headers: {
+        'Authorization': `Bearer ${this.deepseekApiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
     
-    this.logger.log(`LM Studio client initialized (URL=${this.BaseURL}, model=${this.model})`);
+    this.logger.log(`AI clients initialized - LM Studio: ${this.lmStudioURL} | DeepSeek: ${this.deepseekURL}`);
   }
 
   /**
@@ -114,12 +134,12 @@ export class AiService {
   }
 
   /**
-   * Unified AI API call method with system/user role support
+   * Unified AI API call method with LM Studio primary and DeepSeek fallback
    * @param input - Input data 
    * @param prompt - Either string prompt or object with system/user roles
    * @returns Promise with AI API response
    */
-  callAI(input: string, prompt: string | { system: string; user: string }) {
+  async callAI(input: string, prompt: string | { system: string; user: string }) {
     const isMergeOperation = typeof prompt === 'string' && (prompt.includes('merge') || prompt.includes('consolidate'));
     
     // Build messages array based on prompt type
@@ -130,98 +150,43 @@ export class AiService {
           { role: 'user', content: prompt.user }
         ];
     
-    // DYNAMIC PARAMETER CONFIGURATION: Optimize AI parameters for consistency
-    return this.client.post('/v1/chat/completions', {
-      model: this.model,
+    // AI parameters configuration
+    const requestConfig = {
       messages,
-      temperature: isMergeOperation ? 0.2 : 0.1, // Very low temperature for maximum consistency
+      temperature: isMergeOperation ? 0.2 : 0.1,
       max_tokens: 2000,
-      top_p: 0.9, // Add top_p for more focused responses
-      frequency_penalty: 0.3, // Reduce repetition
-      presence_penalty: 0.1, // Encourage diverse vocabulary
-    });
+      top_p: 0.9,
+      frequency_penalty: 0.3,
+      presence_penalty: 0.1,
+    };
+
+    // Try LM Studio first
+    if (this.lmStudioURL && this.lmStudioModel) {
+      try {
+        this.logger.log('Attempting LM Studio API call...');
+        const response = await this.lmStudioClient.post('/v1/chat/completions', {
+          model: this.lmStudioModel,
+          ...requestConfig,
+        });
+        this.logger.log('LM Studio API call successful');
+        return response;
+      } catch (error) {
+        this.logger.warn('LM Studio failed, falling back to DeepSeek:', error.message);
+      }
+    }
+
+    // Fallback to DeepSeek
+    try {
+      this.logger.log('Using DeepSeek API...');
+      const response = await this.deepseekClient.post('/v1/chat/completions', {
+        model: this.deepseekModel,
+        ...requestConfig,
+      });
+      this.logger.log('DeepSeek API call successful');
+      return response;
+    } catch (error) {
+      this.logger.error('Both AI services failed:', error);
+      throw new Error(`AI services unavailable: ${error.message}`);
+    }
   }
-
-  /**
-   * Validate and normalize AI response to ensure consistency
-   * @param response - Parsed AI response
-   * @returns Normalized WeeklyReportResponse
-   */
-  // private validateAndNormalizeResponse(response: any): WeeklyReportResponse {
-  //   // Define required fields that must always be present
-  //   const requiredFields = ['progress', 'human_resource', 'testing', 'week_goal'];
-    
-  //   // Initialize with default values and handle human_resource array format
-  //   const normalizedResponse: Partial<WeeklyReportResponse> = {
-  //     project_name: response.project_name || 'Project Analysis',
-  //     member: response.member || '0',
-  //     progress: response.progress || 'No progress data available',
-  //     customer_communication: response.customer_communication || '',
-  //     human_resource: this.normalizeHumanResource(response.human_resource),
-  //     profession: response.profession || '',
-  //     technical_solution: response.technical_solution || '',
-  //     testing: response.testing || 'No testing data available',
-  //     milestone: response.milestone || '',
-  //     week_goal: response.week_goal || 'No weekly goals identified',
-  //     issue: response.issue || '',
-  //     risks: response.risks || ''
-  //   };
-
-  //   // Validate required fields are not empty (skip human_resource as it's handled above)
-  //   requiredFields.forEach(field => {
-  //     if (field === 'human_resource') return; // Skip as it's already normalized
-      
-  //     const fieldValue = response[field];
-  //     // Check if field exists, is a string, and is not empty after trimming
-  //     if (!fieldValue || typeof fieldValue !== 'string' || fieldValue.trim() === '') {
-  //       this.logger.warn(`Required field '${field}' is missing, not a string, or empty - using default value`);
-  //       switch (field) {
-  //         case 'customer_communication':
-  //           normalizedResponse.customer_communication = 'No customer communication data available';
-  //           break;
-  //         case 'progress':
-  //           normalizedResponse.progress = 'Progress analysis not available from provided data';
-  //           break;
-  //         case 'testing':
-  //           normalizedResponse.testing = 'Testing information not found in daily notes';
-  //           break;
-  //         case 'week_goal':
-  //           normalizedResponse.week_goal = 'Weekly goals not identified from available data';
-  //           break;
-  //       }
-  //     }
-  //   });
-
-  //   return normalizedResponse as WeeklyReportResponse;
-  // }
-
-  // /**
-  //  * Normalize human resource data from array or string to string format
-  //  */
-  // private normalizeHumanResource(humanResourceData: any): string {
-  //   if (!humanResourceData) {
-  //     return 'No team member data available';
-  //   }
-
-  //   // If it's already a string, return as is
-  //   if (typeof humanResourceData === 'string') {
-  //     return humanResourceData.trim() || 'No team member data available';
-  //   }
-
-  //   // If it's an array, format it properly
-  //   if (Array.isArray(humanResourceData)) {
-  //     return humanResourceData.map(member => {
-  //       if (typeof member === 'object' && member.name && member.tasks) {
-  //         const tasks = Array.isArray(member.tasks) 
-  //           ? member.tasks.join(', ') 
-  //           : String(member.tasks);
-  //         return `${member.name}: ${tasks}`;
-  //       }
-  //       return String(member);
-  //     }).join(' | ');
-  //   }
-
-  //   // Fallback for other types
-  //   return String(humanResourceData) || 'No team member data available';
-  // }
 }

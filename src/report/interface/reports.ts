@@ -22,4 +22,5 @@ export interface WeeklyReportResponse {
   week_goal: string;
   issue: string;
   risks: string;
+  dailyLess?: any[];
 }

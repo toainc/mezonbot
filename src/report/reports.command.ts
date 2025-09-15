@@ -3,7 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { ChannelMessage, ChannelMessageContent, Events } from 'mezon-sdk';
 import { ReportService } from './reports.service';
 import { BotService } from 'src/bot/bot.service';
-import { parse } from 'path';
+import { DailyNote } from './interface/reports';
 
 @Injectable()
 export class ReportsCommand {
@@ -104,6 +104,14 @@ export class ReportsCommand {
           // Handle other types (numbers, booleans, etc.)
           formattedValue = String(reportData[key]);
         }
+
+        // Add dailyLess information to human_resource field
+        if (key === 'human_resource' && reportData.dailyLess && Array.isArray(reportData.dailyLess) && reportData.dailyLess.length > 0) {
+          formattedValue += '\n\nMembers has off days:\n';
+          reportData.dailyLess.forEach((member: any) => {
+            formattedValue += `• ${member.memberName}: ${member.totalDays} days (${member.workingHours}h)\n`;
+          });
+        }
         
         formattedMessage += `${label}\n${formattedValue}\n\n`;
       }
@@ -111,6 +119,9 @@ export class ReportsCommand {
 
     return formattedMessage;
   }
+  /**
+   * complain all the members daily enought 5 times in a week.
+   */
 
   //extract and valid command
   private extractAndParseCommand(message: ChannelMessage): {
