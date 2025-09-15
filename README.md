@@ -5,7 +5,7 @@ MezonBot is an intelligent bot system integrated with AI to analyze daily report
 ## 🌟 Key Features
 
 - **📊 Automated Weekly Reports**: Analyzes daily notes data and generates detailed weekly reports
-- **🤖 AI Integration**: Uses LM Studio and DeepSeek for natural language processing with fallback mechanism
+- **🤖 AI Integration**: Uses LM Studio and AI API for natural language processing with fallback mechanism
 - **💬 Mezon Bot Integration**: Seamless integration with Mezon platform
 - **📈 Progress Tracking**: Real-time project progress analysis and monitoring
 - **👥 Team Management**: Tracks activities and contributions of each team member
@@ -15,7 +15,7 @@ MezonBot is an intelligent bot system integrated with AI to analyze daily report
 
 - **Backend**: NestJS (Node.js framework)
 - **Database**: MySQL with Prisma ORM
-- **AI**: LM Studio (Local AI server) with DeepSeek fallback
+- **AI**: LM Studio (Local AI server) with AI API fallback
 - **Platform**: Mezon SDK
 - **Language**: TypeScript
 - **Testing**: Jest
@@ -76,10 +76,10 @@ MEZON_TOKEN=your_mezon_bot_token_here
 LM_STUDIO_API_URL=http://localhost:1234
 LM_STUDIO_MODEL=your_local_model_name
 
-# AI Configuration - DeepSeek (Fallback)
-DEEPSEEK_API_URL=https://api.deepseek.com
-DEEPSEEK_MODEL=deepseek-chat
-DEEPSEEK_API_KEY=your_deepseek_api_key_here
+# AI Configuration - AI API (Fallback)
+AI_API_URL=https://api.deepseek.com
+AI_API_MODEL=deepseek-chat
+AI_API_KEY=your_ai_api_key_here
 
 # AI Service Configuration
 AI_TIMEOUT=120000
@@ -236,9 +236,9 @@ mezonbot/
 | `MEZON_TOKEN` | Mezon bot token | - | ✅ |
 | `LM_STUDIO_API_URL` | LM Studio API endpoint | `http://localhost:1234` | ❌ |
 | `LM_STUDIO_MODEL` | Local AI model name | - | ❌ |
-| `DEEPSEEK_API_URL` | DeepSeek API endpoint | `https://api.deepseek.com` | ❌ |
-| `DEEPSEEK_MODEL` | DeepSeek model name | `deepseek-chat` | ❌ |
-| `DEEPSEEK_API_KEY` | DeepSeek API key | - | ✅ |
+| `AI_API_URL` | AI API endpoint | `https://api.deepseek.com` | ❌ |
+| `AI_API_MODEL` | AI API model name | `deepseek-chat` | ❌ |
+| `AI_API_KEY` | AI API key | - | ✅ |
 | `AI_TIMEOUT` | AI request timeout (ms) | `120000` | ❌ |
 
 ## 🤖 AI Service Architecture
@@ -250,7 +250,7 @@ The system uses a hybrid AI approach with intelligent fallback:
 - **Privacy**: Data stays on your machine
 - **Customizable**: Use any compatible model
 
-### Fallback Service - DeepSeek:
+### Fallback Service - AI API:
 - **Cloud-based**: High availability
 - **Reliable**: Professional API service
 - **Automatic**: Seamless failover when LM Studio is unavailable
@@ -258,10 +258,10 @@ The system uses a hybrid AI approach with intelligent fallback:
 ### Fallback Scenarios:
 | Situation | Action |
 |-----------|--------|
-| LM Studio offline | → Switch to DeepSeek |
-| LM Studio timeout | → Switch to DeepSeek |
-| LM Studio network error | → Switch to DeepSeek |
-| LM Studio not configured | → Use DeepSeek only |
+| LM Studio offline | → Switch to AI API |
+| LM Studio timeout | → Switch to AI API |
+| LM Studio network error | → Switch to AI API |
+| LM Studio not configured | → Use AI API only |
 | Both services fail | → Return error |
 
 ## 🐛 Troubleshooting
@@ -282,7 +282,7 @@ sudo systemctl restart mysql
 - Check URL and port in `.env` file
 - Verify model is loaded properly
 
-#### 3. DeepSeek API Error
+#### 3. AI API Error
 - Check API key validity
 - Verify internet connection
 - Check API rate limits

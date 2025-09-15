@@ -12,41 +12,41 @@ export class AiService {
   private readonly logger = new Logger(AiService.name);
   private readonly lmStudioURL: string | undefined;
   private readonly lmStudioModel: string | undefined;
-  private readonly deepseekURL: string;
-  private readonly deepseekModel: string;
-  private readonly deepseekApiKey: string;
+  private readonly aiAPIURL: string;
+  private readonly aiAPIModel: string;
+  private readonly aiAPIApiKey: string;
   private readonly timeout: number;
   private readonly lmStudioClient: AxiosInstance;
-  private readonly deepseekClient: AxiosInstance;
+  private readonly aiAPIClient: AxiosInstance;
 
   constructor(private readonly configService: ConfigService) {
     // LM Studio Configuration
     this.lmStudioURL = this.configService.get<string>('LM_STUDIO_API_URL');
     this.lmStudioModel = this.configService.get<string>('LM_STUDIO_MODEL');
     
-    // DeepSeek Configuration
-    this.deepseekURL = this.configService.get<string>('DEEPSEEK_API_URL') || 'https://api.deepseek.com';
-    this.deepseekModel = this.configService.get<string>('DEEPSEEK_MODEL') || 'deepseek-chat';
-    this.deepseekApiKey = this.configService.get<string>('DEEPSEEK_API_KEY') || '';
+    // AI API Configuration
+    this.aiAPIURL = this.configService.get<string>('AI_API_URL') || 'https://api.deepseek.com';
+    this.aiAPIModel = this.configService.get<string>('AI_API_MODEL') || 'deepseek-chat';
+    this.aiAPIApiKey = this.configService.get<string>('AI_API_KEY') || '';
     
     this.timeout = this.configService.get<number>('AI_TIMEOUT') || 1200000;
 
-    // HTTP CLIENT SETUP: Configure axios instances for both LM Studio and DeepSeek
+    // HTTP CLIENT SETUP: Configure axios instances for both LM Studio and AI API
     this.lmStudioClient = axios.create({
       baseURL: this.lmStudioURL,
       timeout: this.timeout,
     });
 
-    this.deepseekClient = axios.create({
-      baseURL: this.deepseekURL,
+    this.aiAPIClient = axios.create({
+      baseURL: this.aiAPIURL,
       timeout: this.timeout,
       headers: {
-        'Authorization': `Bearer ${this.deepseekApiKey}`,
+        'Authorization': `Bearer ${this.aiAPIApiKey}`,
         'Content-Type': 'application/json',
       },
     });
     
-    this.logger.log(`AI clients initialized - LM Studio: ${this.lmStudioURL} | DeepSeek: ${this.deepseekURL}`);
+    this.logger.log(`AI clients initialized - LM Studio: ${this.lmStudioURL} | AI API: ${this.aiAPIURL}`);
   }
 
   /**
@@ -134,7 +134,7 @@ export class AiService {
   }
 
   /**
-   * Unified AI API call method with LM Studio primary and DeepSeek fallback
+   * Unified AI API call method with LM Studio primary and AI API fallback
    * @param input - Input data 
    * @param prompt - Either string prompt or object with system/user roles
    * @returns Promise with AI API response
@@ -171,18 +171,18 @@ export class AiService {
         this.logger.log('LM Studio API call successful');
         return response;
       } catch (error) {
-        this.logger.warn('LM Studio failed, falling back to DeepSeek:', error.message);
+        this.logger.warn('LM Studio failed, falling back to AI API:', error.message);
       }
     }
 
-    // Fallback to DeepSeek
+    // Fallback to AI API
     try {
-      this.logger.log('Using DeepSeek API...');
-      const response = await this.deepseekClient.post('/v1/chat/completions', {
-        model: this.deepseekModel,
+      this.logger.log('Using AI API...');
+      const response = await this.aiAPIClient.post('/v1/chat/completions', {
+        model: this.aiAPIModel,
         ...requestConfig,
       });
-      this.logger.log('DeepSeek API call successful');
+      this.logger.log('AI API call successful');
       return response;
     } catch (error) {
       this.logger.error('Both AI services failed:', error);
