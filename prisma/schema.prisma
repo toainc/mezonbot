@@ -34,7 +34,6 @@ model weekly_reports {
   progress               String    @db.Text
   customer_communication String    @db.Text
   human_resource         String    @db.Text
-  profession             String    @db.VarChar(255)
   technical_solution     String    @db.Text
   testing                String    @db.Text
   milestone              String    @db.Text

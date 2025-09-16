@@ -6,6 +6,11 @@ import { AiService } from 'src/ai/ai.service';
 import { DailyNote, WeeklyReportResponse } from './interface/reports';
 import { get } from 'http';
 
+// Simple UTC+7 timezone helper
+function toUTCPlus7(date: Date): Date {
+  return new Date(date.getTime() + (7 * 60 * 60 * 1000));
+}
+
 /**
  * Service for handling weekly report generation and management
  * Processes commands, generates AI reports, and manages bot responses
@@ -24,10 +29,14 @@ export class ReportService {
     const validTime = Math.max(0, Math.min(time, 12));
     const now = new Date();
     const daysToMonday = now.getDay() === 0 ? 6 : now.getDay() - 1;
+    
+    // Calculate Monday of the target week
     const currentWeek = new Date(
       now.getTime() - daysToMonday * 24 * 60 * 60 * 1000,
     );
     currentWeek.setDate(currentWeek.getDate() - validTime * 7);
+    currentWeek.setHours(0, 0, 0, 0);
+    
     return { startDate: currentWeek };
   }
 
@@ -40,6 +49,16 @@ export class ReportService {
     option: boolean;
   } {
     const [commandName, timeStr, optionStr] = command.split(' ');
+    
+    // Handle help command
+    if (commandName.toLowerCase() === '*help') {
+      return {
+        commandName: '*help',
+        time: new Date(),
+        option: false,
+      };
+    }
+    
     const timeParam = parseInt(timeStr) || 0;
 
     if (timeParam < 0 || timeParam > 12) {
@@ -63,6 +82,8 @@ export class ReportService {
     option: boolean,
   ): Promise<WeeklyReportResponse | null> {
     const endDate = new Date(day.getTime() + 6 * 24 * 60 * 60 * 1000);
+    endDate.setHours(23, 59, 59, 999);
+    console.log(day);
 
     if (!option) {
       const existingReport = await this.reportsRepository.findExistedReport(
@@ -82,11 +103,12 @@ export class ReportService {
     );
 
     try {
+      const dailyCheck = await this.DailyLess(inputData);
+      console.log(`Members with less than 5 working days: ${dailyCheck.length}`);
       const aiResponse = await this.aiService.GenerateReport(inputData);
       if (aiResponse) {
         aiResponse.project_name = inputData[0]?.projectName || 'Unknown Project';
         aiResponse.member = new Set(inputData.map(n => n.memberName)).size;
-        const dailyCheck = await this.DailyLess(inputData);
         const finalReport = { ...aiResponse, dailyLess: dailyCheck };
         
         // Save the weekly report to database
@@ -154,8 +176,9 @@ export class ReportService {
       .map(([memberName, stats]) => ({
         memberName,
         totalDays: stats.totalDays,
-        workingHours: stats.workingHours,
       }));
+
+    console.log(`membersWithLessThan5Days: ${JSON.stringify(membersWithLessThan5Days)}`)
     return membersWithLessThan5Days;
   }
 }
@@ -192,7 +215,7 @@ function analyzeWeeklyDataByMember(dailyNotes: DailyNote[]) {
   return memberStats;
 }
 
-async function cleanCheckOffDate(dailyNotes: DailyNote[]) : Promise<DailyNote[]> {
+async function cleanCheckOffDate(dailyNotes: DailyNote[]): Promise<DailyNote[]> {
   const uniqueRecords = new Map<string, DailyNote>();
 
   dailyNotes.forEach(note => {

@@ -26,36 +26,42 @@ export class ReportsCommand {
     let finalResult: ChannelMessageContent | null = null;
     
 
-    if(parsed.commandName.startsWith('*weeklyreport')) {
-      // send waiting message
-      const replyMessage = await this.reportService.sendReplyMessage(message);
-      
-      try {
-        switch (parsed.commandName) {
-          case '*weeklyreport':
-            const reportResult = await this.reportService.handleWeeklyReport(parsed.time, message.channel_id, parsed.option);
-            
-            // Gắn return value vào finalResult
-            finalResult = {
-              t: reportResult ? this.formatReportMessage(reportResult) : 'No report data available'
-            };
-            break;
-          default:
-            finalResult = {
-              t: 'Unknown command'
-            };
-            break;
+    switch (parsed.commandName) {
+      case '*weeklyreport':
+        // send waiting message
+        const replyMessage = await this.reportService.sendReplyMessage(message);
+        
+        try {
+          const reportResult = await this.reportService.handleWeeklyReport(parsed.time, message.channel_id, parsed.option);
+          
+          // Gắn return value vào finalResult
+          finalResult = {
+            t: reportResult ? this.formatReportMessage(reportResult) : 'No report data available'
+          };
+        } catch (error) {
+          finalResult = {
+            t: `Error generating report: ${error instanceof Error ? error.message : 'Unknown error'}`
+          };
         }
-      } catch (error) {
-        finalResult = {
-          t: `Error generating report: ${error instanceof Error ? error.message : 'Unknown error'}`
-        };
-      }
 
-      // Update message with result
-      await this.reportService.updateMessageWithResult(message, replyMessage, finalResult);
-    } else {
-      return null;
+        // Update message with result
+        await this.reportService.updateMessageWithResult(message, replyMessage, finalResult);
+        break;
+        
+      case '*help':
+        // send waiting message
+        const helpReplyMessage = await this.reportService.sendReplyMessage(message);
+        
+        finalResult = {
+          t: this.getHelpMessage()
+        };
+        
+        // Update message with result
+        await this.reportService.updateMessageWithResult(message, helpReplyMessage, finalResult);
+        break;
+        
+      default:
+        return null;
     }
 
     return finalResult;
@@ -109,7 +115,7 @@ export class ReportsCommand {
         if (key === 'human_resource' && reportData.dailyLess && Array.isArray(reportData.dailyLess) && reportData.dailyLess.length > 0) {
           formattedValue += '\n\nMembers has off days:\n';
           reportData.dailyLess.forEach((member: any) => {
-            formattedValue += `• ${member.memberName}: ${member.totalDays} days (${member.workingHours}h)\n`;
+            formattedValue += `• ${member.memberName}: ${5 - member.totalDays} days\n`;
           });
         }
         
@@ -119,6 +125,43 @@ export class ReportsCommand {
 
     return formattedMessage;
   }
+
+  private getHelpMessage(): string {
+    return `🤖 **MezonBot Help** - AI-Powered Project Management Bot
+
+📋 **Available Commands:**
+
+**📊 Weekly Reports:**
+\`*weeklyreport\` - Generate current week report
+\`*weeklyreport 1\` - Generate report for 1 week ago  
+\`*weeklyreport 2\` - Generate report for 2 weeks ago
+\`*weeklyreport 0 r\` - Regenerate current week report with fresh data
+\`*weeklyreport 1 r\` - Regenerate report for 1 week ago with fresh data
+
+**❓ Help:**
+\`*help\` - Show this help message
+
+📝 **Usage Examples:**
+• \`*weeklyreport\` - Get this week's automated report
+• \`*weeklyreport 1\` - Get last week's report  
+• \`*weeklyreport 2 r\` - Regenerate 2 weeks ago report
+
+🔧 **Features:**
+• 📊 Automated weekly reports with AI analysis
+• 🤖 AI integration (LM Studio + API fallback)
+• 📈 Progress tracking and team management
+• 🔍 Technical analysis and testing evaluation
+• 👥 Team member activity monitoring
+
+💡 **Tips:**
+• Use \`r\` option to regenerate reports with fresh data
+• Reports are automatically generated from daily notes
+• AI analyzes your team's progress and provides insights
+
+🆘 **Need more help?**
+Contact the development team or check the documentation.`;
+  }
+
   /**
    * complain all the members daily enought 5 times in a week.
    */

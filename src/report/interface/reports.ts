@@ -15,7 +15,6 @@ export interface WeeklyReportResponse {
   progress: string;
   customer_communication: string;
   human_resource: string;
-  profession: string;
   technical_solution: string;
   testing: string;
   milestone: string;

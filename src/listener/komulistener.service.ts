@@ -72,6 +72,16 @@ export class KomuListenerService {
     return result;
   }
 
+  private extractDateFromCreateTime(createTime: Date): Date {
+    // Extract only the date part (year, month, day) from the datetime
+    const year = createTime.getFullYear();
+    const month = createTime.getMonth();
+    const day = createTime.getDate();
+    
+    // Create a new Date object with only the date part (time will be 00:00:00)
+    return new Date(year, month, day);
+  }
+
   async upsertDailyNote(message: ChannelMessage) {
     const userInfo = await this.parseUserInfor(message);
     const dailyNote = await this.parseDailyNote(message);
@@ -95,7 +105,7 @@ export class KomuListenerService {
                 project_name: dailyNote.project_name,
                 work_type: dailyNote.working_type,
                 is_daily_late: dailyNote.is_daily_late,
-                date: dailyNote.date ? new Date(dailyNote.date) : undefined,
+                date: this.extractDateFromCreateTime(dailyNote.update_time),
                 yesterday: dailyNote.yesterday,
                 today: dailyNote.today,
                 block: dailyNote.block,
