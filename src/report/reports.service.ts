@@ -4,7 +4,7 @@ import { BotService } from '../bot/bot.service';
 import { ReportsRepository } from './reports.repository';
 import { AiService } from 'src/ai/ai.service';
 import { DailyNote, WeeklyReportResponse } from './interface/reports';
-import { get } from 'http';
+import fs from 'fs';
 
 // Simple UTC+7 timezone helper
 function toUTCPlus7(date: Date): Date {
@@ -51,9 +51,9 @@ export class ReportService {
     const [commandName, timeStr, optionStr] = command.split(' ');
     
     // Handle help command
-    if (commandName.toLowerCase() === '*help') {
+    if (commandName.toLowerCase() === '*pa-help') {
       return {
-        commandName: '*help',
+        commandName: '*pa-help',
         time: new Date(),
         option: false,
       };
@@ -102,6 +102,7 @@ export class ReportService {
       `Found ${inputData.length} daily notes for week ${day.toDateString()}`,
     );
 
+    //write input data to file
     try {
       const dailyCheck = await this.DailyLess(inputData);
       console.log(`Members with less than 5 working days: ${dailyCheck.length}`);

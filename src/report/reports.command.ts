@@ -48,7 +48,7 @@ export class ReportsCommand {
         await this.reportService.updateMessageWithResult(message, replyMessage, finalResult);
         break;
         
-      case '*help':
+      case '*pa-help':
         // send waiting message
         const helpReplyMessage = await this.reportService.sendReplyMessage(message);
         
@@ -139,7 +139,7 @@ export class ReportsCommand {
 \`*weeklyreport 1 r\` - Regenerate report for 1 week ago with fresh data
 
 **❓ Help:**
-\`*help\` - Show this help message
+\`*pa-help\` - Show this help message
 
 📝 **Usage Examples:**
 • \`*weeklyreport\` - Get this week's automated report

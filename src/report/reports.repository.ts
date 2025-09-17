@@ -120,7 +120,6 @@ export class ReportsRepository {
         milestone: reportData.milestone,
         week_goal: reportData.week_goal,
         issue: reportData.issue,
-        risks: reportData.risks,
         end_of_week: endOfWeekUTC7,
         date_log: startDateUTC7,
       },

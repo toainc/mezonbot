@@ -39,7 +39,6 @@ model weekly_reports {
   milestone              String    @db.Text
   week_goal              String    @db.Text
   issue                  String    @db.Text
-  risks                  String    @db.Text
   create_time            DateTime  @default(now())
   end_of_week            DateTime  @db.Date
   date_log               DateTime  @db.Date

@@ -16,6 +16,7 @@ ANALYSIS METHODOLOGY:
 - Assess blockers, challenges, and issues from daily notes
 - Evaluate testing activities and quality assurance processes
 - Extract weekly goals from completed and planned activities
+- workload rating (Idle / Light / Moderate / High / Heavy / Overloaded).
 
 OUTPUT REQUIREMENTS:
 - Respond with valid JSON only, no additional text or explanations
@@ -32,14 +33,15 @@ MANDATORY FIELDS (ALL must be included as strings):
 2. "member": Count unique team members and return as string number (e.g., "15")  
 3. "progress": Analyze task completion patterns, workflow efficiency, yesterday→today task connections, overall advancement
 4. "customer_communication": Assess client interactions, demos, stakeholder meetings, feedback sessions (use "No customer communication activities reported" if none)
-5. "human_resource": List the highlighted team members with their roles who are either overloaded or underloaded due to their ticket workload, using the format: Name1: task summary | Name2: task summary | Name3: task summary"
-6. "profession": Summarize professional skills, expertise, and technical capabilities demonstrated by the team
+5. "human_resource":List each team member in the format: Name: number of tasks (list task IDs) | assessment of whether they are overloaded.
 7. "technical_solution": Describe technical approaches, architectures, tools, frameworks, and implementation strategies used
 8. "testing": Evaluate QA activities, testing processes, bug identification, quality control measures, test coverage
 9. "milestone": Identify completed milestones, upcoming deadlines, deliverables, and project phases
 10. "week_goal": Extract and summarize weekly objectives achieved and key accomplishments from daily activities
 11. "issue": List current blockers, challenges, impediments, and problems reported in daily notes
-12. "risks": Identify potential risks, concerns, dependencies, and threats to project timeline or quality
+
+OUTPUT DATA FORMAT:
+"human_resource" field example: Name: number of tasks (list task IDs) | workload rating
 
 STRICT JSON OUTPUT FORMAT (ALL fields required as strings):
 {

@@ -57,13 +57,22 @@ export class AiService {
     try {
       // Data Extraction and Preparation
       // Extract only relevant fields from daily notes to reduce token usage and focus AI analysis
-      const inputArray = dailyNotes.map(note => ({
-        projectName: note.projectName,
-        memberName: note.memberName,
-        today: note.today,
-        date: note.date,
-        block: note.block,
-      }));
+
+
+
+      const inputArray = dailyNotes.map(note => {
+        const dayOfWeek = note.date.getDay(); 
+        const noteContent = dayOfWeek === 5 ? note.today : note.yesterday;
+        
+        return {
+          memberName: note.memberName,
+          note: noteContent,
+          date: note.date,
+          block: note.block,
+        };
+      });
+
+      console.log( JSON.stringify(inputArray, null, 2));
 
       // Data Chunking for Token Management
       // Split large datasets into smaller chunks (30 objects max) to stay within AI token limits
